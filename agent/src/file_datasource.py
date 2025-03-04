@@ -15,8 +15,19 @@ class FileDatasource:
         self.accel_file = None
         self.gps_file = None
         self.parking_file = None
+        self.agr_data = None
 
     def read(self) -> AggregatedData:
+        try:
+            return self.agr_data.pop(0)
+        except IndexError:
+            return AggregatedData.default()
+
+    def startReading(self):
+        self.accel_file = open(self.accelerometer_filename, "r")
+        self.gps_file = open(self.gps_filename, "r")
+        self.parking_file = open(self.parking_filename, "r")
+
         accel_reader = DictReader(self.accel_file, delimiter=",")
         gps_reader = DictReader(self.gps_file, delimiter=",")
         parking_reader = DictReader(self.parking_file, delimiter=",")
@@ -36,7 +47,7 @@ class FileDatasource:
             for row in parking_reader
         ]
 
-        agr_data = [
+        self.agr_data = [
             AggregatedData(
                 accel,
                 gps if gps is not None else Gps(0.0, 0.0),
@@ -50,13 +61,6 @@ class FileDatasource:
                 parking_data + [None] * (len(accel_data) - len(parking_data)),
             )
         ]
-
-        return agr_data
-
-    def startReading(self):
-        self.accel_file = open(self.accelerometer_filename, "r")
-        self.gps_file = open(self.gps_filename, "r")
-        self.parking_file = open(self.parking_filename, "r")
         print("Successfully opened files")
 
     def stopReading(self):
