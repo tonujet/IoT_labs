@@ -23,14 +23,10 @@ if __name__ == "__main__":
         ],
     )
     # Create an instance of the StoreApiAdapter using the configuration
-    # hub_adapter = HubHttpAdapter(
-    #     api_base_url=HUB_URL,
-    # )
-    hub_adapter = HubMqttAdapter(
-        broker=HUB_MQTT_BROKER_HOST,
-        port=HUB_MQTT_BROKER_PORT,
-        topic=HUB_MQTT_TOPIC,
+    hub_adapter = HubHttpAdapter(
+        api_base_url=HUB_URL,
     )
+
     # Create an instance of the AgentMQTTAdapter using the configuration
     agent_adapter = AgentMQTTAdapter(
         broker_host=MQTT_BROKER_HOST,
