@@ -2,6 +2,10 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
+
+class RainData(BaseModel):
+    intensity: float
+
 class AccelerometerData(BaseModel):
     x: float
     y: float
@@ -17,10 +21,12 @@ class AgentData(BaseModel):
     user_id: int
     accelerometer: AccelerometerData
     gps: GpsData
+    rain: RainData
+    temperature: float
     timestamp: datetime
 
     @classmethod
-    @field_validator('timestamp', mode='before')
+    @field_validator("timestamp", mode="before")
     def parse_timestamp(cls, value):
         # Convert the timestamp to a datetime object
         if isinstance(value, datetime):

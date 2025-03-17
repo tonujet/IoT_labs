@@ -1,5 +1,5 @@
 # Use a lightweight Python image as the base image
-FROM python:3.9-slim
+FROM python:3.10
 
 # Install Rust and necessary system dependencies
 RUN apt update && apt install -y curl gcc g++ libpq-dev cargo

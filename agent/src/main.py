@@ -31,7 +31,6 @@ def publish(client, topic, datasource, delay):
         data = datasource.read()
         msg = AggregatedDataSchema().dumps(data)
         result = client.publish(topic, msg)
-        # result: [0, 1]
         status = result[0]
         if status == 0:
             pass
@@ -43,7 +42,11 @@ def publish(client, topic, datasource, delay):
 def run():
     client = connect_mqtt(config.MQTT_BROKER_HOST, config.MQTT_BROKER_PORT)
     datasource = FileDatasource(
-        "data/accelerometer.csv", "data/gps.csv", "data/parking.csv"
+        "data/accelerometer.csv",
+        "data/gps.csv",
+        "data/parking.csv",
+        "data/rain.csv",
+        "data/temp.csv",
     )
     publish(client, config.MQTT_TOPIC, datasource, config.DELAY)
 

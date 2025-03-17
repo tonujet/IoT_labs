@@ -37,12 +37,15 @@ processed_agent_data = Table(
     metadata,
     Column("id", Integer, primary_key=True, index=True),
     Column("road_state", String),
+    Column("rain_state", String),
     Column("user_id", Integer),
     Column("x", Float),
     Column("y", Float),
     Column("z", Float),
     Column("latitude", Float),
     Column("longitude", Float),
+    Column("rain_intensity", Float),
+    Column("temperature", Float),
     Column("timestamp", DateTime),
 )
 SessionLocal = sessionmaker(bind=engine)
@@ -53,6 +56,10 @@ class AccelerometerData(BaseModel):
     y: float
     z: float
 
+class RainData(BaseModel):
+    intensity: float
+
+
 class GpsData(BaseModel):
     latitude: float
     longitude: float
@@ -61,6 +68,8 @@ class AgentData(BaseModel):
     user_id: int
     accelerometer: AccelerometerData
     gps: GpsData
+    rain: RainData
+    temperature: float
     timestamp: datetime
 
     @classmethod
@@ -77,6 +86,7 @@ class AgentData(BaseModel):
 
 class ProcessedAgentData(BaseModel):
     road_state: str
+    rain_state: str
     agent_data: AgentData
 
 # WebSocket subscriptions
@@ -110,12 +120,15 @@ async def create_processed_agent_data(data: List[ProcessedAgentData]):
         agent_data = record.agent_data
         db.execute(processed_agent_data.insert().values(
             road_state=record.road_state,
+            rain_state=record.rain_state,
             user_id=agent_data.user_id,
             x=agent_data.accelerometer.x,
             y=agent_data.accelerometer.y,
             z=agent_data.accelerometer.z,
             latitude=agent_data.gps.latitude,
             longitude=agent_data.gps.longitude,
+            rain_intensity=agent_data.rain.intensity,
+            temperature=agent_data.temperature,
             timestamp=agent_data.timestamp
         ))
         await send_data_to_subscribers(agent_data.user_id, record.dict())
@@ -146,7 +159,10 @@ def update_processed_agent_data(processed_agent_data_id: int, data: ProcessedAge
         .where(processed_agent_data.c.id == processed_agent_data_id)
         .values(
             road_state=data.road_state,
-            timestamp=data.agent_data.timestamp
+            rain_state=data.rain_state,
+            timestamp=data.agent_data.timestamp,
+            temperature=data.agent_data.temperature,
+            rain_intensity=data.agent_data.rain.intensity,
         )
     )
     db.commit()
