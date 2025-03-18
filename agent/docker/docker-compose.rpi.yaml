@@ -1,0 +1,24 @@
+version: "3.9"
+name: "road_vision"
+services:
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mqtt
+    volumes:
+      - ./mosquitto:/mosquitto
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    ports:
+      - 1883:1883
+      - 9001:9001
+
+  fake_agent:
+    container_name: agent
+    build: ../
+    depends_on:
+      - mqtt
+    environment:
+      MQTT_BROKER_HOST: 192.168.31.72
+      MQTT_BROKER_PORT: 1883
+      MQTT_TOPIC: "agent_data_topic"
+      DELAY: 1
