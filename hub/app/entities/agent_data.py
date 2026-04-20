@@ -17,11 +17,25 @@ class GpsData(BaseModel):
     longitude: float
 
 
+class TrafficLightData(BaseModel):
+    state: str         # "red", "yellow", "green"
+    duration: int
+    gps: GpsData
+
+
+class AirQualityData(BaseModel):
+    pm25: float
+    pm10: float
+    co2: float
+
+
 class AgentData(BaseModel):
     user_id: int
     accelerometer: AccelerometerData
     gps: GpsData
     rain: RainData
+    traffic_light: TrafficLightData
+    air_quality: AirQualityData
     temperature: float
     timestamp: datetime
 

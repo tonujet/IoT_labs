@@ -1,0 +1,109 @@
+{
+  "uid": "sensor-overview",
+  "title": "Sensor Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Records",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 3 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT COUNT(*)::int AS total FROM processed_agent_data;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "piechart",
+      "title": "Road State Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 3, "w": 6, "h": 8 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT road_state AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) GROUP BY road_state;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "piechart",
+      "title": "Rain State Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 6, "y": 3, "w": 6, "h": 8 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT rain_state AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) GROUP BY rain_state;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "piechart",
+      "title": "Air Quality State Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 3, "w": 6, "h": 8 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT air_quality_state AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) AND air_quality_state IS NOT NULL GROUP BY air_quality_state;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "piechart",
+      "title": "Traffic Light State Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 18, "y": 3, "w": 6, "h": 8 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT traffic_light_state AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) AND traffic_light_state IS NOT NULL GROUP BY traffic_light_state;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Temperature (last hour)",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 11, "w": 24, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "celsius", "custom": { "lineWidth": 2, "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, temperature FROM processed_agent_data WHERE $__timeFilter(timestamp) ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    }
+  ]
+}

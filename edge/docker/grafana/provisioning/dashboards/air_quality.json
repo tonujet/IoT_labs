@@ -1,0 +1,126 @@
+{
+  "uid": "air-quality",
+  "title": "Air Quality",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Current PM2.5",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "µg/m³", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 12 }, { "color": "orange", "value": 35 }, { "color": "red", "value": 55 }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT pm25 AS value FROM processed_agent_data ORDER BY timestamp DESC LIMIT 1;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Current PM10",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "µg/m³", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 54 }, { "color": "orange", "value": 154 }, { "color": "red", "value": 254 }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT pm10 AS value FROM processed_agent_data ORDER BY timestamp DESC LIMIT 1;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Current CO2",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "ppm", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 800 }, { "color": "orange", "value": 1200 }, { "color": "red", "value": 2000 }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT co2 AS value FROM processed_agent_data ORDER BY timestamp DESC LIMIT 1;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "PM2.5 (last hour)",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "µg/m³", "custom": { "lineWidth": 2, "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, pm25 FROM processed_agent_data WHERE $__timeFilter(timestamp) ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "PM10 (last hour)",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "µg/m³", "custom": { "lineWidth": 2, "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, pm10 FROM processed_agent_data WHERE $__timeFilter(timestamp) ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "CO2 (last hour)",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 11, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "ppm", "custom": { "lineWidth": 2, "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, co2 FROM processed_agent_data WHERE $__timeFilter(timestamp) ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "piechart",
+      "title": "AQI Category Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 11, "w": 12, "h": 7 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT air_quality_state AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) AND air_quality_state IS NOT NULL GROUP BY air_quality_state;",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

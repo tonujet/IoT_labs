@@ -1,0 +1,127 @@
+{
+  "uid": "traffic-lights",
+  "title": "Traffic Lights",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "piechart",
+      "title": "Traffic Light State Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 9 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "red" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byName", "options": "yellow" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+          { "matcher": { "id": "byName", "options": "green" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "Stop" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byName", "options": "Caution" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+          { "matcher": { "id": "byName", "options": "Safe to go" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT COALESCE(traffic_light_color, traffic_light_state) AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) AND (traffic_light_color IS NOT NULL OR traffic_light_state IS NOT NULL) GROUP BY 1;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "barchart",
+      "title": "Average Phase Duration by Color",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 9 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "red": { "color": "red", "index": 0, "text": "red" },
+                "yellow": { "color": "yellow", "index": 1, "text": "yellow" },
+                "green": { "color": "green", "index": 2, "text": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "orientation": "horizontal",
+        "colorByField": "color",
+        "xField": "color",
+        "xTickLabelRotation": 0,
+        "groupWidth": 0.7,
+        "barWidth": 0.97
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT traffic_light_color AS color, AVG(traffic_light_duration)::float AS avg_duration FROM processed_agent_data WHERE $__timeFilter(timestamp) AND traffic_light_color IS NOT NULL GROUP BY traffic_light_color ORDER BY CASE traffic_light_color WHEN 'red' THEN 0 WHEN 'yellow' THEN 1 WHEN 'green' THEN 2 END;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "geomap",
+      "title": "Traffic Light Locations",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 9, "w": 24, "h": 10 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "#F2CC0C", "value": 0.5 },
+              { "color": "green", "value": 1.5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": { "id": "coords", "lat": 50.45, "lon": 30.52, "zoom": 11 },
+        "basemap": { "type": "default", "config": {} },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Traffic Lights",
+            "config": {
+              "style": {
+                "size": { "fixed": 8 },
+                "color": { "field": "color_code" },
+                "opacity": 1,
+                "symbol": { "mode": "fixed", "fixed": "img/icons/marker/circle.svg" }
+              }
+            },
+            "location": { "mode": "coords", "latitude": "traffic_light_latitude", "longitude": "traffic_light_longitude" }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT DISTINCT ON (traffic_light_latitude, traffic_light_longitude) traffic_light_latitude, traffic_light_longitude, traffic_light_color, CASE traffic_light_color WHEN 'red' THEN 0 WHEN 'yellow' THEN 1 WHEN 'green' THEN 2 END AS color_code FROM processed_agent_data WHERE traffic_light_latitude IS NOT NULL AND traffic_light_longitude IS NOT NULL AND traffic_light_color IS NOT NULL ORDER BY traffic_light_latitude, traffic_light_longitude, timestamp DESC;",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

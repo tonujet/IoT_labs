@@ -1,0 +1,84 @@
+{
+  "uid": "weather",
+  "title": "Weather",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Current Temperature",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "fieldConfig": { "defaults": { "unit": "celsius", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "green", "value": 10 }, { "color": "orange", "value": 25 }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT temperature AS value FROM processed_agent_data ORDER BY timestamp DESC LIMIT 1;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Current Rain Intensity",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 5 },
+      "fieldConfig": { "defaults": { "unit": "mm", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "blue", "value": 1 }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT rain_intensity AS value FROM processed_agent_data ORDER BY timestamp DESC LIMIT 1;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "piechart",
+      "title": "Rain State Distribution",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "values": ["value", "percent"] }, "pieType": "pie", "displayLabels": [], "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^value$/", "values": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT rain_state AS metric, COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) GROUP BY rain_state;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Temperature & Rain Intensity",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 10 },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 10 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "temperature" }, "properties": [{ "id": "unit", "value": "celsius" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byName", "options": "rain_intensity" }, "properties": [{ "id": "unit", "value": "mm" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }, { "id": "custom.axisPlacement", "value": "right" }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, temperature, rain_intensity FROM processed_agent_data WHERE $__timeFilter(timestamp) ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    }
+  ]
+}

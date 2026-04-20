@@ -47,6 +47,8 @@ def run():
         "data/parking.csv",
         "data/rain.csv",
         "data/temp.csv",
+        "data/traffic_light.csv",
+        "data/air_quality.csv",
     )
     publish(client, config.MQTT_TOPIC, datasource, config.DELAY)
 

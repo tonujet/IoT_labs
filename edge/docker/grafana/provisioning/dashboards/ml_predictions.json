@@ -1,0 +1,222 @@
+{
+  "uid": "ml-predictions",
+  "title": "ML Predictions",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now+5m" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Temperature — Actual vs Predicted",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "celsius", "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 4 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "actual" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "LinearRegression" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }, { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] },
+          { "matcher": { "id": "byName", "options": "MovingAverage" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }, { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, temperature AS actual FROM processed_agent_data WHERE $__timeFilter(timestamp) AND temperature IS NOT NULL ORDER BY timestamp;",
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT prediction_timestamp AS time, predicted_value AS \"LinearRegression\" FROM predictions WHERE field_name = 'temperature' AND model_name = 'LinearRegression' AND $__timeFilter(prediction_timestamp) ORDER BY prediction_timestamp;",
+          "format": "time_series"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT prediction_timestamp AS time, predicted_value AS \"MovingAverage\" FROM predictions WHERE field_name = 'temperature' AND model_name = 'MovingAverage' AND $__timeFilter(prediction_timestamp) ORDER BY prediction_timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "PM2.5 — Actual vs Predicted",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "µg/m³", "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 4 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "actual" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "LinearRegression" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }, { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] },
+          { "matcher": { "id": "byName", "options": "MovingAverage" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }, { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, pm25 AS actual FROM processed_agent_data WHERE $__timeFilter(timestamp) AND pm25 IS NOT NULL ORDER BY timestamp;",
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT prediction_timestamp AS time, predicted_value AS \"LinearRegression\" FROM predictions WHERE field_name = 'pm25' AND model_name = 'LinearRegression' AND $__timeFilter(prediction_timestamp) ORDER BY prediction_timestamp;",
+          "format": "time_series"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT prediction_timestamp AS time, predicted_value AS \"MovingAverage\" FROM predictions WHERE field_name = 'pm25' AND model_name = 'MovingAverage' AND $__timeFilter(prediction_timestamp) ORDER BY prediction_timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Temperature — MAE over time",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 6 },
+      "fieldConfig": {
+        "defaults": { "unit": "celsius", "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 4 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "LinearRegression" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "MovingAverage" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(mae) AS \"LinearRegression\" FROM predictions WHERE field_name = 'temperature' AND model_name = 'LinearRegression' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(mae) AS \"MovingAverage\" FROM predictions WHERE field_name = 'temperature' AND model_name = 'MovingAverage' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Temperature — RMSE over time",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 6, "y": 8, "w": 6, "h": 6 },
+      "fieldConfig": {
+        "defaults": { "unit": "celsius", "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 4 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "LinearRegression" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "MovingAverage" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(rmse) AS \"LinearRegression\" FROM predictions WHERE field_name = 'temperature' AND model_name = 'LinearRegression' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(rmse) AS \"MovingAverage\" FROM predictions WHERE field_name = 'temperature' AND model_name = 'MovingAverage' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "PM2.5 — MAE over time",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 6 },
+      "fieldConfig": {
+        "defaults": { "unit": "µg/m³", "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 4 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "LinearRegression" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "MovingAverage" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(mae) AS \"LinearRegression\" FROM predictions WHERE field_name = 'pm25' AND model_name = 'LinearRegression' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(mae) AS \"MovingAverage\" FROM predictions WHERE field_name = 'pm25' AND model_name = 'MovingAverage' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "PM2.5 — RMSE over time",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 6 },
+      "fieldConfig": {
+        "defaults": { "unit": "µg/m³", "custom": { "lineWidth": 2, "fillOpacity": 5, "spanNulls": true, "showPoints": "always", "pointSize": 4 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "LinearRegression" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "MovingAverage" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(rmse) AS \"LinearRegression\" FROM predictions WHERE field_name = 'pm25' AND model_name = 'LinearRegression' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT created_at AS time, AVG(rmse) AS \"MovingAverage\" FROM predictions WHERE field_name = 'pm25' AND model_name = 'MovingAverage' AND $__timeFilter(created_at) GROUP BY created_at ORDER BY created_at;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Model Comparison (latest metrics)",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 5 },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "mae" }, "properties": [{ "id": "unit", "value": "short" }, { "id": "decimals", "value": 3 }] },
+          { "matcher": { "id": "byName", "options": "rmse" }, "properties": [{ "id": "unit", "value": "short" }, { "id": "decimals", "value": 3 }] }
+        ]
+      },
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT DISTINCT ON (field_name, model_name) field_name, model_name, mae, rmse, created_at FROM predictions ORDER BY field_name, model_name, created_at DESC;",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

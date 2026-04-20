@@ -1,0 +1,88 @@
+{
+  "uid": "road-quality",
+  "title": "Road Quality",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "timezone": "browser",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Accelerometer Z-axis",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+      "fieldConfig": { "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 5 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT timestamp AS time, z FROM processed_agent_data WHERE $__timeFilter(timestamp) ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Potholes Detected",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 5 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) AND road_state = 'Pit';",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Speed Bumps Detected",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 6, "y": 8, "w": 6, "h": 5 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value", "colorMode": "value" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT COUNT(*)::int AS value FROM processed_agent_data WHERE $__timeFilter(timestamp) AND road_state = 'Speeding bump';",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "geomap",
+      "title": "Anomaly Locations",
+      "datasource": { "type": "postgres", "uid": "postgres_ds" },
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 10 },
+      "options": {
+        "view": { "id": "coords", "lat": 50.45, "lon": 30.52, "zoom": 11 },
+        "basemap": { "type": "default", "config": {} },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Anomalies",
+            "config": { "size": { "fixed": 6 }, "color": { "fixed": "red" } },
+            "location": { "mode": "coords", "latitude": "latitude", "longitude": "longitude" }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres_ds" },
+          "rawSql": "SELECT latitude, longitude, road_state FROM processed_agent_data WHERE $__timeFilter(timestamp) AND road_state IN ('Pit','Speeding bump') AND latitude IS NOT NULL;",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,15 @@ def process_agent_data(
 ) -> ProcessedAgentData:
     road_state = process_road_state(agent_data)
     rain_state = process_rain_state(agent_data)
-    prep = ProcessedAgentData(road_state=road_state, rain_state=rain_state, agent_data=agent_data)
+    traffic_light_state = process_traffic_light_state(agent_data)
+    air_quality_state = process_air_quality_state(agent_data)
+    prep = ProcessedAgentData(
+        road_state=road_state,
+        rain_state=rain_state,
+        traffic_light_state=traffic_light_state,
+        air_quality_state=air_quality_state,
+        agent_data=agent_data,
+    )
     logging.info(prep)
     return prep
 
@@ -25,7 +33,7 @@ def process_road_state(agent_data: AgentData):
         data_points.pop(0)
 
     if len(data_points) < 2:
-        return ProcessedAgentData(road_state="Not enough data", agent_data=agent_data)
+        return "Not enough data"
 
     last_point = data_points[-1]
     prev_points = data_points[:-1]
@@ -60,3 +68,34 @@ def process_rain_state(agent_data: AgentData):
         return "Downpour"
     else:
         return "Invalid intensity"
+
+
+def process_traffic_light_state(agent_data: AgentData) -> str:
+    """Classify safety based on traffic light state and time until change"""
+    state = agent_data.traffic_light.state
+    duration = agent_data.traffic_light.duration
+    if state == "green" and duration > 10:
+        return "Safe to go"
+    elif state == "green" and duration <= 10:
+        return "Caution"
+    elif state == "yellow":
+        return "Caution"
+    else:  # red
+        return "Stop"
+
+
+def process_air_quality_state(agent_data: AgentData) -> str:
+    """Classify air quality by PM2.5 (AQI standard)"""
+    pm25 = agent_data.air_quality.pm25
+    if pm25 <= 12:
+        return "Good"
+    elif pm25 <= 35.4:
+        return "Moderate"
+    elif pm25 <= 55.4:
+        return "Unhealthy for Sensitive"
+    elif pm25 <= 150.4:
+        return "Unhealthy"
+    elif pm25 <= 250.4:
+        return "Very Unhealthy"
+    else:
+        return "Hazardous"

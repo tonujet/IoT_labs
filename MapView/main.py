@@ -129,6 +129,15 @@ class Map(FloatLayout):
     rain_rect: Rectangle = None
     rain_widget: CustomWidget = None
     temp_widget: CustomWidget = None
+    traffic_light_widget: CustomWidget = None
+    traffic_light_color: str = None
+    traffic_light_duration: int = None
+    traffic_light_state: str = None
+    air_quality_widget: CustomWidget = None
+    air_quality_state: str = None
+    pm25: float = None
+    tl_lat: float = None
+    tl_lon: float = None
 
     def build(self):
         return self.mapview
@@ -161,6 +170,8 @@ class Map(FloatLayout):
     def update_state(self, dt):
         self.update_rain_widget(dt)
         self.update_temp_widget(dt)
+        self.update_traffic_light_widget(dt)
+        self.update_air_quality_widget(dt)
         self.update_layers(dt)
         self.update_label_position(dt)
 
@@ -175,9 +186,25 @@ class Map(FloatLayout):
             self.rain_state = data.get("rain_state")
             self.temp = agent_data.get("temperature")
 
+            # Parse new sensors
+            self.traffic_light_state = data.get("traffic_light_state")
+            self.air_quality_state = data.get("air_quality_state")
+
+            traffic_light = agent_data.get("traffic_light", {})
+            self.traffic_light_color = traffic_light.get("state")
+            self.traffic_light_duration = traffic_light.get("duration")
+
+            air_quality = agent_data.get("air_quality", {})
+            self.pm25 = air_quality.get("pm25")
+
             point = agent_data.get("gps")
             lat = point.get("latitude")
             lon = point.get("longitude")
+
+            # GPS of traffic light (separate position)
+            tl_gps = traffic_light.get("gps", {})
+            self.tl_lat = tl_gps.get("latitude")
+            self.tl_lon = tl_gps.get("longitude")
 
             if lat is not None and lon is not None:
                 Clock.schedule_once(lambda dt: self.update_markers(lat, lon))
@@ -222,6 +249,51 @@ class Map(FloatLayout):
         self.temp_widget.draw()
         self.mapview.add_layer(self.temp_widget)
 
+    def update_traffic_light_widget(self, dt):
+        if self.traffic_light_widget:
+            self.mapview.remove_layer(self.traffic_light_widget)
+
+        color_map = {
+            "green": (0, 0.8, 0, 0.8),
+            "yellow": (1, 0.9, 0, 0.8),
+            "red": (1, 0, 0, 0.8),
+        }
+        bg_color = color_map.get(self.traffic_light_color, (0.5, 0.5, 0.5, 0.8))
+        duration_text = f" {self.traffic_light_duration}s" if self.traffic_light_duration else ""
+
+        tl_text = f"🚦 {(self.traffic_light_state or 'N/A')}{duration_text}"
+        self.traffic_light_widget = CustomWidget(
+            text=tl_text,
+            margin=(-205, -175),
+            color=bg_color,
+        )
+        self.traffic_light_widget.draw()
+        self.mapview.add_layer(self.traffic_light_widget)
+
+    def update_air_quality_widget(self, dt):
+        if self.air_quality_widget:
+            self.mapview.remove_layer(self.air_quality_widget)
+
+        color_map = {
+            "Good": (0, 0.7, 0, 0.8),
+            "Moderate": (1, 0.8, 0, 0.8),
+            "Unhealthy for Sensitive": (1, 0.5, 0, 0.8),
+            "Unhealthy": (1, 0, 0, 0.8),
+            "Very Unhealthy": (0.6, 0, 0.2, 0.8),
+            "Hazardous": (0.5, 0, 0, 0.9),
+        }
+        bg_color = color_map.get(self.air_quality_state, (0.5, 0.5, 0.5, 0.8))
+        pm_text = f" PM2.5:{self.pm25}" if self.pm25 else ""
+
+        aq_text = f"💨 {(self.air_quality_state or 'N/A')}{pm_text}"
+        self.air_quality_widget = CustomWidget(
+            text=aq_text,
+            margin=(-205, -235),
+            color=bg_color,
+        )
+        self.air_quality_widget.draw()
+        self.mapview.add_layer(self.air_quality_widget)
+
     def update_layers(self, dt):
         for layer in self.mapview._layers:
             if hasattr(layer, 'reposition'):
@@ -242,6 +314,9 @@ class Map(FloatLayout):
         self.mapview.add_marker(self.car_marker)
 
         self.set_rain_marker(lat, lon)
+
+        if self.tl_lat and self.tl_lon and self.traffic_light_color:
+            self.set_traffic_light_marker(self.tl_lat, self.tl_lon)
 
     def speeding_bump_fix(self):
         if self.road_state == "Speeding bump":
@@ -279,6 +354,10 @@ class Map(FloatLayout):
     def set_bump_marker(self, lat, lon):
         bump_marker = MapMarker(lat=lat, lon=lon, source='images/bump.png')
         self.mapview.add_marker(bump_marker)
+
+    def set_traffic_light_marker(self, lat, lon):
+        tl_marker = MapMarker(lat=lat, lon=lon, source='images/traffic_light.png')
+        self.mapview.add_marker(tl_marker)
 
     def set_basic_analysis(self):
         speed_bump_cor = fileDatasource.get_bump_cor()

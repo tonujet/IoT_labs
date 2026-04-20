@@ -5,6 +5,8 @@ from domain.accelerometer import Accelerometer
 from domain.gps import Gps
 from domain.parking import Parking
 from domain.rain import Rain
+from domain.traffic_light import TrafficLight
+from domain.air_quality import AirQuality
 import config
 
 
@@ -14,6 +16,8 @@ class AggregatedData:
     gps: Gps
     parking: Parking
     rain: Rain
+    traffic_light: TrafficLight
+    air_quality: AirQuality
     temperature: float
     timestamp: datetime
     user_id: int
@@ -25,6 +29,8 @@ class AggregatedData:
             Gps(0.0, 0.0),
             Parking(0, Gps(0.0, 0.0)),
             Rain(0),
+            TrafficLight("red", 0, Gps(0.0, 0.0)),
+            AirQuality(0.0, 0.0, 0.0),
             0,
             datetime.now(),
             config.USER_ID,
